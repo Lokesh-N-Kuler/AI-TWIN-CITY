@@ -21,7 +21,7 @@ from uvicorn._types import (
 )
 from uvicorn.config import Config
 from uvicorn.logging import TRACE_LOG_LEVEL
-from uvicorn.protocols.http.flow_control import CLOSE_HEADER, HIGH_WATER_LIMIT, FlowControl, service_unavailable
+from uvicorn.protocols.http.flow_control import HIGH_WATER_LIMIT, FlowControl, service_unavailable
 from uvicorn.protocols.utils import get_client_addr, get_local_addr, get_path_with_query_string, get_remote_addr, is_ssl
 from uvicorn.server import ServerState
 
@@ -145,6 +145,9 @@ class ZttpProtocol(asyncio.Protocol):
     def handle_events(self, event: zttp.Event) -> None:
         while event is not zttp.NEED_DATA:
             if isinstance(event, zttp.Request):
+                # Pipelined HTTP requests and WebSocket upgrades may be processed after the keep-alive timer is armed.
+                self._unset_keepalive_if_required()
+
                 assert isinstance(event.headers, zttp.HeaderBlock)
                 self.headers = event.headers.to_list(lowercase_names=True)
                 path = event.path.decode("ascii")
@@ -180,8 +183,6 @@ class ZttpProtocol(asyncio.Protocol):
                     self.logger.warning(message)
                 else:
                     app = self.app
-
-                self._unset_keepalive_if_required()
 
                 self.cycle = RequestResponseCycle(
                     scope=self.scope,
@@ -422,9 +423,6 @@ class RequestResponseCycle:
 
             status = message["status"]
             headers = self.default_headers + list(message.get("headers", []))
-
-            if CLOSE_HEADER in self.scope["headers"] and CLOSE_HEADER not in headers:
-                headers = headers + [CLOSE_HEADER]
 
             bodyless = self.scope["method"] == "HEAD" or status in (204, 304) or status < 200
 
