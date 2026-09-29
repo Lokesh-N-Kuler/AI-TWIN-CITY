@@ -6,41 +6,61 @@ import {
   YAxis,
   Tooltip,
   Legend,
+  CartesianGrid
 } from "recharts";
 
-import { useEffect, useState } from "react";
-import { getFloodData } from "../Services/FloodService";
+function formatTime(value) {
+  if (!value) {
+    return "";
+  }
 
-function FloodChart() {
-  const [data, setData] = useState([]);
+  const date = new Date(value);
 
-  useEffect(() => {
-    async function loadFloodData() {
-      try {
-        const floodData = await getFloodData();
-        setData(floodData.chart);
-      } catch (error) {
-        console.log(error);
-      }
-    }
+  return date.toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
 
-    loadFloodData();
-  }, []);
-
+function FloodChart({ data, waterLevelSource }) {
   return (
     <div className="flood-chart-card">
+
       <div className="chart-heading">
+
         <div>
           <h2>Rainfall & Water Level</h2>
-          <p>Last 24 hours</p>
+
+          <p>
+            Hourly environmental monitoring
+          </p>
         </div>
+
+        <span className="chart-source-status">
+          {waterLevelSource
+            ? "Live sensor data"
+            : "Water-level sensor unavailable"}
+        </span>
+
       </div>
 
       <ResponsiveContainer width="100%" height={300}>
+
         <LineChart data={data}>
-          <XAxis dataKey="time" />
+
+          <CartesianGrid strokeDasharray="3 3" />
+
+          <XAxis
+            dataKey="time"
+            tickFormatter={formatTime}
+          />
+
           <YAxis />
-          <Tooltip />
+
+          <Tooltip
+            labelFormatter={formatTime}
+          />
+
           <Legend />
 
           <Line
@@ -48,18 +68,32 @@ function FloodChart() {
             dataKey="rainfall"
             stroke="#2563eb"
             strokeWidth={3}
+            dot={false}
             name="Rainfall (mm)"
           />
 
           <Line
             type="monotone"
-            dataKey="waterLevel"
+            dataKey="water_level"
             stroke="#ef4444"
             strokeWidth={3}
+            dot={false}
             name="Water Level (m)"
+            connectNulls={false}
           />
+
         </LineChart>
+
       </ResponsiveContainer>
+
+      {!waterLevelSource && (
+        <p className="chart-note">
+          Water-level values are not fabricated. Connect an
+          actual water-level/river sensor source to display
+          this series.
+        </p>
+      )}
+
     </div>
   );
 }

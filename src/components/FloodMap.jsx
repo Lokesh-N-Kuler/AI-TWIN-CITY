@@ -1,33 +1,55 @@
-import { useEffect, useState } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  CircleMarker,
+  Popup,
+  useMap
+} from "react-leaflet";
+
+import "leaflet/dist/leaflet.css";
 import "../styles/flood.css";
-import { getFloodData } from "../Services/FloodService";
 
-function FloodMap() {
-  const [locations, setLocations] = useState([]);
+function MapView() {
+  const map = useMap();
 
-  useEffect(() => {
-    async function loadFloodMap() {
-      try {
-        const data = await getFloodData();
-        setLocations(data.mapLocations);
-      } catch (error) {
-        console.log(error);
-      }
-    }
+  setTimeout(() => {
+    map.invalidateSize();
+  }, 100);
 
-    loadFloodMap();
-  }, []);
+  return null;
+}
 
+function getRiskColor(risk) {
+  if (risk === "High") {
+    return "#dc2626";
+  }
+
+  if (risk === "Moderate") {
+    return "#f59e0b";
+  }
+
+  if (risk === "Low") {
+    return "#2563eb";
+  }
+
+  return "#16a34a";
+}
+
+function FloodMap({ locations }) {
   return (
     <div className="flood-map-card">
 
       <div className="flood-map-header">
+
         <div>
           <h2>Flood Risk Map</h2>
-          <p>Real-time monitoring of flood-prone areas</p>
+          <p>
+            Geographic rainfall-based monitoring zones
+          </p>
         </div>
 
         <div className="map-legend">
+
           <span>
             <i className="safe-dot"></i>
             Safe
@@ -35,35 +57,97 @@ function FloodMap() {
 
           <span>
             <i className="medium-dot"></i>
-            Medium Risk
+            Moderate
           </span>
 
           <span>
             <i className="high-dot"></i>
-            High Risk
+            High
           </span>
+
         </div>
+
       </div>
 
-      <div className="flood-map">
-        <div className="map-background">
+      <div className="flood-map geographic-map">
+
+        <MapContainer
+          center={[12.9716, 77.5946]}
+          zoom={11}
+          scrollWheelZoom={true}
+          className="leaflet-map"
+        >
+
+          <TileLayer
+            attribution='&copy; OpenStreetMap contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+
+          <MapView />
 
           {locations.map((location, index) => (
-            <div
-              key={index}
-              className={`flood-location ${location.risk}-location ${location.position}`}
+
+            <CircleMarker
+              key={`${location.name}-${index}`}
+              center={[
+                location.latitude,
+                location.longitude
+              ]}
+              radius={10}
+              pathOptions={{
+                color: getRiskColor(location.risk),
+                fillColor: getRiskColor(location.risk),
+                fillOpacity: 0.75
+              }}
             >
-              <span className="location-dot"></span>
-              <p>{location.name}</p>
-            </div>
+
+              <Popup>
+
+                <div className="flood-map-popup">
+
+                  <h3>{location.name}</h3>
+
+                  <p>
+                    <strong>Risk:</strong>{" "}
+                    {location.risk}
+                  </p>
+
+                  <p>
+                    <strong>Rainfall:</strong>{" "}
+                    {Number(location.rainfall).toFixed(1)} mm
+                  </p>
+
+                  <p>
+                    <strong>Water Level:</strong>{" "}
+                    {location.water_level == null
+                      ? "N/A"
+                      : `${location.water_level} m`}
+                  </p>
+
+                  <p className="popup-source">
+                    Weather-derived monitoring
+                  </p>
+
+                </div>
+
+              </Popup>
+
+            </CircleMarker>
+
           ))}
 
-          <div className="map-center-text">
-            <h3>Live Flood Monitoring</h3>
-            <p>Risk zones across the city</p>
-          </div>
+        </MapContainer>
 
-        </div>
+        {locations.length === 0 && (
+          <div className="map-empty-message">
+            <h3>No elevated-risk zones</h3>
+            <p>
+              Current monitoring data does not identify
+              any elevated rainfall-risk locations.
+            </p>
+          </div>
+        )}
+
       </div>
 
     </div>

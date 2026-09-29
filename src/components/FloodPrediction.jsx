@@ -2,85 +2,122 @@ import { useEffect, useState } from "react";
 import { getFloodData } from "../Services/FloodService";
 
 function FloodPrediction() {
-  const [prediction, setPrediction] = useState(null);
+  const [data, setData] = useState(null);
 
   useEffect(() => {
     async function loadFloodPrediction() {
       try {
-        const data = await getFloodData();
-        setPrediction(data.prediction);
+        const result = await getFloodData();
+        setData(result);
       } catch (error) {
-        console.log(error);
+        console.error("Flood prediction error:", error);
       }
     }
 
     loadFloodPrediction();
   }, []);
 
-  if (!prediction) {
-    return <div className="flood-prediction-card">Loading...</div>;
+  if (!data) {
+    return (
+      <div className="flood-prediction-card">
+        Loading flood risk assessment...
+      </div>
+    );
+  }
+
+  const riskScore = Number(data.risk_score) || 0;
+
+  let assessment = "Low flood risk";
+
+  if (riskScore >= 70) {
+    assessment = "High flood risk";
+  } else if (riskScore >= 40) {
+    assessment = "Moderate flood risk";
   }
 
   return (
     <div className="flood-prediction-card">
 
       <div className="prediction-header">
+
         <div>
-          <h2>AI Flood Prediction</h2>
-          <p>AI analysis based on rainfall and water-level patterns</p>
+          <h2>Flood Risk Assessment</h2>
+
+          <p>
+            Current flood-risk assessment from the backend
+          </p>
         </div>
 
-        <span className="ai-status">AI ANALYSIS</span>
+        <span className="ai-status">
+          LIVE ANALYSIS
+        </span>
+
       </div>
 
       <div className="prediction-content">
 
         <div className="prediction-main">
-          <p className="prediction-label">PREDICTED HIGH-RISK AREA</p>
 
-          <h3>{prediction.area}</h3>
+          <p className="prediction-label">
+            CURRENT RISK LEVEL
+          </p>
+
+          <h3>{data.riskLevel}</h3>
 
           <p className="prediction-text">
-            {prediction.description}
+            The flood monitoring system currently reports a{" "}
+            <strong>{data.riskLevel}</strong> risk level for{" "}
+            <strong>{data.location}</strong>.
+            The current risk score is {riskScore} out of 100.
           </p>
 
           <div className="prediction-details">
 
             <div className="prediction-item">
-              <span>Flood Probability</span>
-              <strong className="danger-text">
-                {prediction.probability}
+              <span>Risk Score</span>
+              <strong>
+                {riskScore}/100
               </strong>
             </div>
 
             <div className="prediction-item">
-              <span>Expected Time</span>
-              <strong>{prediction.expectedTime}</strong>
+              <span>Rainfall</span>
+              <strong>
+                {data.rainfall} mm
+              </strong>
             </div>
 
             <div className="prediction-item">
-              <span>Risk Level</span>
-              <strong className="high-risk-text">
-                {prediction.riskLevel}
+              <span>Affected Areas</span>
+              <strong>
+                {data.affected_areas}
               </strong>
             </div>
 
           </div>
+
         </div>
 
         <div className="recommendation-box">
 
-          <h3>Recommended Actions</h3>
+          <h3>Current Assessment</h3>
 
           <ul>
-            {prediction.recommendations.map((item, index) => (
-              <li key={index}>{item}</li>
-            ))}
-          </ul>
+            <li>
+              {assessment}
+            </li>
 
-          <button className="action-btn">
-            View Emergency Plan
-          </button>
+            <li>
+              Monitoring location: {data.location}
+            </li>
+
+            <li>
+              Last updated:{" "}
+              {data.updatedAt
+                ? new Date(data.updatedAt).toLocaleString()
+                : "Unavailable"}
+            </li>
+          </ul>
 
         </div>
 
