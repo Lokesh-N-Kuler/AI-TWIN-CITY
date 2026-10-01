@@ -2,60 +2,112 @@ import { useEffect, useState } from "react";
 import { getEmergencyData } from "../Services/EmergencyService";
 
 function EmergencyStats() {
-  const [stats, setStats] = useState([]);
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     async function loadEmergencyData() {
       try {
-        const data = await getEmergencyData();
-
-        setStats([
-          {
-            title: "Active Incidents",
-            value: data.stats.activeIncidents,
-            subtitle: "Currently being monitored",
-            type: "red",
-          },
-          {
-            title: "Critical Alerts",
-            value: data.stats.criticalAlerts,
-            subtitle: "Immediate action required",
-            type: "orange",
-          },
-          {
-            title: "Response Teams",
-            value: data.stats.responseTeams,
-            subtitle: "Teams currently deployed",
-            type: "blue",
-          },
-          {
-            title: "Resolved Today",
-            value: data.stats.resolvedToday,
-            subtitle: "Successfully handled",
-            type: "green",
-          },
-        ]);
+        const result = await getEmergencyData();
+        setData(result);
       } catch (error) {
-        console.log(error);
+        console.error("Emergency stats error:", error);
+        setError(true);
       }
     }
 
     loadEmergencyData();
   }, []);
 
+  if (error) {
+    return (
+      <div className="emergency-stats">
+        <div className="emergency-stat-card">
+          <p>Emergency Data</p>
+          <h2 className="red">Unavailable</h2>
+          <span>Unable to fetch live data</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="emergency-stats">
+        {[1, 2, 3, 4].map((item) => (
+          <div className="emergency-stat-card" key={item}>
+            <p>Loading...</p>
+            <h2>--</h2>
+            <span>Fetching real-time data</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  const traffic = data.traffic || {};
+
+  const severityClass =
+    traffic.severity === "Critical"
+      ? "red"
+      : traffic.severity === "High"
+      ? "orange"
+      : traffic.severity === "Medium"
+      ? "orange"
+      : "green";
+
   return (
     <div className="emergency-stats">
-      {stats.map((item, index) => (
-        <div className="emergency-stat-card" key={index}>
-          <p>{item.title}</p>
 
-          <h2 className={item.type}>
-            {item.value}
-          </h2>
+      <div className="emergency-stat-card">
+        <p>Active Incidents</p>
 
-          <span>{item.subtitle}</span>
-        </div>
-      ))}
+        <h2 className="red">
+          {data.stats?.activeIncidents ?? 0}
+        </h2>
+
+        <span>
+          Current live conditions
+        </span>
+      </div>
+
+      <div className="emergency-stat-card">
+        <p>Critical Alerts</p>
+
+        <h2 className="orange">
+          {data.stats?.criticalAlerts ?? 0}
+        </h2>
+
+        <span>
+          Immediate attention required
+        </span>
+      </div>
+
+      <div className="emergency-stat-card">
+        <p>Current Speed</p>
+
+        <h2 className="blue">
+          {traffic.currentSpeed ?? "N/A"} km/h
+        </h2>
+
+        <span>
+          Free flow: {traffic.freeFlowSpeed ?? "N/A"} km/h
+        </span>
+      </div>
+
+      <div className="emergency-stat-card">
+        <p>Traffic Severity</p>
+
+        <h2 className={severityClass}>
+          {traffic.severity ?? "Unknown"}
+        </h2>
+
+        <span>
+          Road closure:{" "}
+          {traffic.roadClosure ? "Yes" : "No"}
+        </span>
+      </div>
+
     </div>
   );
 }

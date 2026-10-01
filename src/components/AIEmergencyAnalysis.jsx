@@ -8,9 +8,12 @@ function AIEmergencyAnalysis() {
     async function loadAnalysis() {
       try {
         const data = await getEmergencyData();
-        setAnalysis(data.aiAnalysis);
+        setAnalysis(data.aiAnalysis || null);
       } catch (error) {
-        console.log(error);
+        console.error(
+          "Emergency analysis error:",
+          error
+        );
       }
     }
 
@@ -20,7 +23,7 @@ function AIEmergencyAnalysis() {
   if (!analysis) {
     return (
       <div className="ai-emergency-card">
-        Loading AI analysis...
+        Emergency analysis unavailable.
       </div>
     );
   }
@@ -29,30 +32,42 @@ function AIEmergencyAnalysis() {
     <div className="ai-emergency-card">
 
       <div className="ai-emergency-header">
+
         <div>
           <h2>AI Emergency Recommendation</h2>
-          <p>AI-powered priority analysis for emergency response</p>
+
+          <p>
+            Automated priority analysis from live traffic data
+          </p>
         </div>
 
         <span className="ai-emergency-badge">
           AI ANALYSIS
         </span>
+
       </div>
 
       <div className="ai-emergency-content">
 
         <div className="emergency-priority">
+
           <p className="priority-label">
             HIGHEST PRIORITY INCIDENT
           </p>
 
-          <h3>{analysis.incident}</h3>
+          <h3>
+            {analysis.incident}
+          </h3>
 
-          <p>{analysis.description}</p>
+          <p>
+            {analysis.description}
+          </p>
 
           <div className="priority-stats">
+
             <div>
               <span>Priority Score</span>
+
               <strong className="priority-red">
                 {analysis.priorityScore}
               </strong>
@@ -60,31 +75,48 @@ function AIEmergencyAnalysis() {
 
             <div>
               <span>People Affected</span>
-              <strong>{analysis.peopleAffected}</strong>
+
+              <strong>
+                {analysis.peopleAffected}
+              </strong>
             </div>
 
             <div>
               <span>Recommended Teams</span>
-              <strong>{analysis.recommendedTeams}</strong>
+
+              <strong>
+                {analysis.recommendedTeams}
+              </strong>
             </div>
+
           </div>
+
         </div>
 
         <div className="ai-actions">
-          <h3>Recommended Actions</h3>
+
+          <h3>
+            Recommended Actions
+          </h3>
 
           <ul>
-            {analysis.actions.map((action, index) => (
-              <li key={index}>{action}</li>
-            ))}
+            {analysis.actions?.map(
+              (action, index) => (
+                <li key={index}>
+                  {action}
+                </li>
+              )
+            )}
           </ul>
 
           <button>
             Generate Response Plan
           </button>
+
         </div>
 
       </div>
+
     </div>
   );
 }
