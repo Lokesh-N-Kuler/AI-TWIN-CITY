@@ -8,8 +8,6 @@ import RoadClosures from "../components/RoadClosures";
 import RouteRecommendation from "../components/RouteRecommendation";
 import TrafficIncidents from "../components/TrafficIncidents";
 
-
-
 function Traffic() {                                   
   return (
     <section id="traffic" className="traffic-page">

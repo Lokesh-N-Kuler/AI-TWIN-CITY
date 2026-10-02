@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-function ChatBox() {
+function ChatBox({ selectedQuestion, onQuestionUsed }) {
   const [messages, setMessages] = useState([
     {
       sender: "ai",
@@ -9,57 +9,85 @@ function ChatBox() {
   ]);
 
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function getAIResponse(question) {
-    const text = question.toLowerCase();
-
-    if (text.includes("traffic")) {
-      return "Traffic is currently moderate. Heavy congestion is expected near Silk Board and Bellandur during peak hours.";
+  useEffect(() => {
+    if (selectedQuestion) {
+      setInput(selectedQuestion);
+      onQuestionUsed();
     }
+  }, [selectedQuestion, onQuestionUsed]);
 
-    if (text.includes("pollution") || text.includes("air")) {
-      return "Air quality is currently moderate. PM 2.5 levels are increasing in high traffic and industrial areas.";
+  async function handleSend() {
+    const question = input.trim();
+
+    if (!question || loading) {
+      return;
     }
-
-    if (text.includes("flood")) {
-      return "Flood risk is currently low. However, some low-lying areas are being continuously monitored.";
-    }
-
-    if (text.includes("emergency")) {
-      return "There are currently 12 active incidents, including 3 high-priority emergencies requiring immediate attention.";
-    }
-
-    if (text.includes("city") || text.includes("status")) {
-      return "The overall city health score is 82%. Traffic and emergency response are stable, while air quality requires attention.";
-    }
-
-    return "Based on the current city data, I recommend monitoring traffic congestion, air quality and emergency incidents closely.";
-  }
-
-  function handleSend() {
-    if (input.trim() === "") return;
 
     const userMessage = {
       sender: "user",
-      text: input,
-    };
-
-    const aiMessage = {
-      sender: "ai",
-      text: getAIResponse(input),
+      text: question,
     };
 
     setMessages((previousMessages) => [
       ...previousMessages,
       userMessage,
-      aiMessage,
     ]);
 
     setInput("");
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/ai/chat",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: question,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.detail || "AI request failed"
+        );
+      }
+
+      const aiMessage = {
+        sender: "ai",
+        text:
+          data.response ||
+          "I could not generate a response from the current city data.",
+      };
+
+      setMessages((previousMessages) => [
+        ...previousMessages,
+        aiMessage,
+      ]);
+    } catch (error) {
+      setMessages((previousMessages) => [
+        ...previousMessages,
+        {
+          sender: "ai",
+          text:
+            "I could not connect to the City Pilot AI backend. Please make sure the FastAPI backend and Gemini configuration are running.",
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   function handleKeyDown(event) {
-    if (event.key === "Enter") {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
       handleSend();
     }
   }
@@ -74,7 +102,11 @@ function ChatBox() {
 
         <div>
           <h2>City Pilot AI</h2>
-          <span>Online and ready to help</span>
+          <span>
+            {loading
+              ? "Analyzing live city data..."
+              : "Online and ready to help"}
+          </span>
         </div>
       </div>
 
@@ -93,6 +125,12 @@ function ChatBox() {
           </div>
         ))}
 
+        {loading && (
+          <div className="message ai-message">
+            Analyzing current CityTwin data...
+          </div>
+        )}
+
       </div>
 
       <div className="chat-input-area">
@@ -103,10 +141,14 @@ function ChatBox() {
           value={input}
           onChange={(event) => setInput(event.target.value)}
           onKeyDown={handleKeyDown}
+          disabled={loading}
         />
 
-        <button onClick={handleSend}>
-          Send
+        <button
+          onClick={handleSend}
+          disabled={loading}
+        >
+          {loading ? "..." : "Send"}
         </button>
 
       </div>

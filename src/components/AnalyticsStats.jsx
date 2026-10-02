@@ -1,46 +1,81 @@
+import { useEffect, useState } from "react";
+
 function AnalyticsStats() {
-  const stats = [
-    {
-      title: "City Health Score",
-      value: "82%",
-      description: "Overall city performance",
-      type: "blue",
-    },
-    {
-      title: "Traffic Efficiency",
-      value: "76%",
-      description: "Average traffic flow",
-      type: "green",
-    },
-    {
-      title: "Air Quality Score",
-      value: "68",
-      description: "Current AQI average",
-      type: "orange",
-    },
-    {
-      title: "Emergency Response",
-      value: "8.4 min",
-      description: "Average response time",
-      type: "red",
-    },
-  ];
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const response = await fetch(
+          "http://127.0.0.1:8000/api/analytics/"
+        );
+
+        if (!response.ok) {
+          throw new Error("Unable to fetch analytics");
+        }
+
+        const result = await response.json();
+
+        setData(result);
+      } catch (error) {
+        console.error("Analytics stats error:", error);
+      }
+    };
+
+    loadData();
+
+    const interval = setInterval(loadData, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const stats = data?.stats;
 
   return (
     <div className="analytics-stats">
-      {stats.map((stat, index) => (
-        <div className="analytics-stat-card" key={index}>
+      <div className="stat-card">
+        <h3>Indian AQI</h3>
+        <p>
+          {stats?.indianAQI ?? "N/A"}
+        </p>
+        <span>
+          {stats?.aqiCategory || "Unavailable"}
+        </span>
+      </div>
 
-          <p>{stat.title}</p>
+      <div className="stat-card">
+        <h3>Traffic Efficiency</h3>
+        <p>
+          {stats?.trafficEfficiency != null
+            ? `${stats.trafficEfficiency}%`
+            : "N/A"}
+        </p>
+        <span>
+          Real-time traffic flow
+        </span>
+      </div>
 
-          <h2 className={stat.type}>
-            {stat.value}
-          </h2>
+      <div className="stat-card">
+        <h3>Dominant Pollutant</h3>
+        <p>
+          {stats?.dominantPollutant
+            ? stats.dominantPollutant.toUpperCase()
+            : "N/A"}
+        </p>
+        <span>
+          CPCB AQI calculation
+        </span>
+      </div>
 
-          <span>{stat.description}</span>
-
-        </div>
-      ))}
+      <div className="stat-card">
+        <h3>Emergency Incidents</h3>
+        <p>
+          {data?.emergency?.activeIncidents ?? "N/A"}
+        </p>
+        <span>
+          Current active incidents
+        </span>
+      </div>
     </div>
   );
 }

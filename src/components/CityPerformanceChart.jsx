@@ -1,113 +1,95 @@
+import { useEffect, useState } from "react";
 import {
   ResponsiveContainer,
   LineChart,
   Line,
+  CartesianGrid,
   XAxis,
   YAxis,
   Tooltip,
-  CartesianGrid,
   Legend,
 } from "recharts";
 
 function CityPerformanceChart() {
-  const data = [
-    {
-      day: "Mon",
-      traffic: 72,
-      pollution: 65,
-      emergency: 82,
-    },
-    {
-      day: "Tue",
-      traffic: 68,
-      pollution: 72,
-      emergency: 85,
-    },
-    {
-      day: "Wed",
-      traffic: 75,
-      pollution: 68,
-      emergency: 78,
-    },
-    {
-      day: "Thu",
-      traffic: 82,
-      pollution: 75,
-      emergency: 88,
-    },
-    {
-      day: "Fri",
-      traffic: 78,
-      pollution: 82,
-      emergency: 84,
-    },
-    {
-      day: "Sat",
-      traffic: 85,
-      pollution: 70,
-      emergency: 90,
-    },
-    {
-      day: "Sun",
-      traffic: 88,
-      pollution: 62,
-      emergency: 92,
-    },
-  ];
+  const [data, setData] = useState([]);
+
+  const loadAnalytics = async () => {
+    try {
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/analytics/"
+      );
+
+      if (!response.ok) {
+        throw new Error("Unable to fetch analytics data");
+      }
+
+      const result = await response.json();
+
+      setData(result.performanceHistory || []);
+    } catch (error) {
+      console.error("Analytics chart error:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadAnalytics();
+
+    const interval = setInterval(() => {
+      loadAnalytics();
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <div className="city-performance-card">
-
-      <div className="analytics-card-header">
+    <div className="performance-chart">
+      {data.length === 0 ? (
         <div>
-          <h2>City Performance Trend</h2>
-
+          <p>Collecting live performance data...</p>
           <p>
-            Performance comparison across major city systems
+            Traffic and emergency history will appear here as CityTwin
+            records real observations.
           </p>
         </div>
-      </div>
+      ) : (
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" />
 
-      <ResponsiveContainer width="100%" height={320}>
-        <LineChart data={data}>
+            <XAxis dataKey="day" />
 
-          <CartesianGrid strokeDasharray="3 3" />
+            <YAxis />
 
-          <XAxis dataKey="day" />
+            <Tooltip />
 
-          <YAxis />
+            <Legend />
 
-          <Tooltip />
+            <Line
+              type="monotone"
+              dataKey="traffic"
+              name="Traffic"
+              strokeWidth={2}
+              dot={false}
+            />
 
-          <Legend />
+            <Line
+              type="monotone"
+              dataKey="pollution"
+              name="Pollution"
+              strokeWidth={2}
+              dot={false}
+            />
 
-          <Line
-            type="monotone"
-            dataKey="traffic"
-            stroke="#2563eb"
-            strokeWidth={3}
-            name="Traffic"
-          />
-
-          <Line
-            type="monotone"
-            dataKey="pollution"
-            stroke="#f59e0b"
-            strokeWidth={3}
-            name="Pollution"
-          />
-
-          <Line
-            type="monotone"
-            dataKey="emergency"
-            stroke="#dc2626"
-            strokeWidth={3}
-            name="Emergency"
-          />
-
-        </LineChart>
-      </ResponsiveContainer>
-
+            <Line
+              type="monotone"
+              dataKey="emergency"
+              name="Emergency"
+              strokeWidth={2}
+              dot={false}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      )}
     </div>
   );
 }

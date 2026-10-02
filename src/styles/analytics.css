@@ -1,6 +1,6 @@
 .analytics-page {
   padding: 40px 30px;
-  background: rgba(13, 13, 25, 0.983);;
+  background: rgba(13, 13, 25, 0.983);
   min-height: 100vh;
   margin-top: 10px;
 }
@@ -41,43 +41,36 @@
   gap: 20px;
 }
 
-.analytics-stat-card {
-  background: black;
+/* YOUR JSX USES .stat-card */
+
+.analytics-stats .stat-card {
+  background: #000000;
   padding: 22px;
   border-radius: 14px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 
-.analytics-stat-card p {
+/* CARD TITLES */
+
+.analytics-stats .stat-card h3 {
   margin: 0;
-  color: #fefffc;
-  font-size: 14px;
+  color: #ff0000;
+  font-size: 16px;
 }
 
-.analytics-stat-card h2 {
+/* MAIN VALUES */
+
+.analytics-stats .stat-card p {
   margin: 12px 0 6px;
+  color: #ffff00;
   font-size: 28px;
 }
 
-.analytics-stat-card span {
+/* SMALL TEXT */
+
+.analytics-stats .stat-card span {
   font-size: 12px;
-  color: #a2e506;
-}
-
-.blue {
-  color: #2563eb;
-}
-
-.green {
-  color: #16a34a;
-}
-
-.orange {
-  color: #f59e0b;
-}
-
-.red {
-  color: #dc2626;
+  color: #f7f7f8;
 }
 
 /* CHART GRID */
@@ -107,7 +100,7 @@
 .analytics-card-header p {
   margin-top: 6px;
   font-size: 13px;
-  color: #dadfe7;
+  color: #1769ec;
 }
 
 /* DEPARTMENT */

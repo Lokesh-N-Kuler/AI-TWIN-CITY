@@ -1,10 +1,10 @@
-function SuggestedQuestions() {
+function SuggestedQuestions({ onQuestionSelect }) {
   const questions = [
     "What is the current traffic situation?",
     "Which areas have poor air quality?",
     "Is there any flood risk today?",
     "Show critical emergencies.",
-    "What actions should the city take?",
+    "What is the current city status?",
   ];
 
   return (
@@ -19,7 +19,11 @@ function SuggestedQuestions() {
       <div className="question-list">
 
         {questions.map((question, index) => (
-          <button key={index} className="question-button">
+          <button
+            key={index}
+            className="question-button"
+            onClick={() => onQuestionSelect(question)}
+          >
             {question}
           </button>
         ))}

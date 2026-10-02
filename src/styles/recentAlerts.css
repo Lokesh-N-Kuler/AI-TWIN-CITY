@@ -30,7 +30,7 @@
     justify-content:space-between;
     align-items:center;
     padding:4px 0;
-    border-bottom:1px solid #e5e7eb;
+    border-bottom:1px solid #ffffff;
 }
 
 .alert-item:last-child{
@@ -39,12 +39,12 @@
 
 .alert-info h4{
     margin:0;
-    color:#fcfcfd;
+    color:#ffae00;
 }
 
 .alert-info p{
     margin-top:4px;
-    color:#6b7280;
+    color:#eff2f7;
 }
 
 .alert-right{
@@ -53,7 +53,7 @@
 
 .alert-right small{
     display:block;
-    color:#9ca3af;
+    color:#f6f6f6;
     margin-top:5px;
 }
 
@@ -76,8 +76,8 @@
     background:rgb(5, 245, 177);
 }
 .alert-item:hover{
-    background-color:#010b11c6;
+    background-color:#486667c6;
     border-radius: 10px;
-    color: black;
+    color: rgb(252, 247, 247);
     
 }

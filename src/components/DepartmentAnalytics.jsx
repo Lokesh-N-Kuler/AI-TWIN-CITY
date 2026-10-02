@@ -1,77 +1,96 @@
+import { useEffect, useState } from "react";
+
 function DepartmentAnalytics() {
-  const departments = [
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const response = await fetch(
+          "http://127.0.0.1:8000/api/analytics/"
+        );
+
+        if (!response.ok) {
+          throw new Error("Unable to fetch department analytics");
+        }
+
+        const result = await response.json();
+
+        setData(result);
+      } catch (error) {
+        console.error("Department analytics error:", error);
+      }
+    };
+
+    loadData();
+
+    const interval = setInterval(loadData, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const departments = data?.departments;
+
+  const rows = [
     {
       name: "Traffic Management",
-      score: 76,
-      status: "Good",
-      type: "good",
-    },
-    {
-      name: "Flood Monitoring",
-      score: 89,
-      status: "Excellent",
-      type: "excellent",
+      score: departments?.traffic?.score,
+      status: departments?.traffic?.status,
     },
     {
       name: "Air Quality",
-      score: 68,
-      status: "Needs Attention",
-      type: "warning",
+      score: departments?.airQuality?.score,
+      status: departments?.airQuality?.status,
+    },
+    {
+      name: "Flood Monitoring",
+      score: departments?.flood?.score,
+      status: departments?.flood?.status,
     },
     {
       name: "Emergency Response",
-      score: 82,
-      status: "Good",
-      type: "good",
+      score: departments?.emergency?.score,
+      status: departments?.emergency?.status,
     },
   ];
 
   return (
-    <div className="department-card">
+    <div className="department-analytics">
+      {rows.map((department) => (
+        <div
+          className="department-row"
+          key={department.name}
+        >
+          <div className="department-info">
+            <h4>{department.name}</h4>
 
-      <div className="analytics-card-header">
-        <div>
-          <h2>Department Performance</h2>
-
-          <p>
-            Current performance by department
-          </p>
-        </div>
-      </div>
-
-      <div className="department-list">
-
-        {departments.map((department, index) => (
-          <div className="department-row" key={index}>
-
-            <div className="department-info">
-              <h4>{department.name}</h4>
-
-              <span
-                className={`department-status ${department.type}`}
-              >
-                {department.status}
-              </span>
-            </div>
-
-            <div className="department-score">
-              <strong>{department.score}%</strong>
-
-              <div className="progress-bar">
-                <div
-                  className={`progress ${department.type}`}
-                  style={{
-                    width: `${department.score}%`,
-                  }}
-                ></div>
-              </div>
-            </div>
-
+            <span className="department-status">
+              {department.status || "Unavailable"}
+            </span>
           </div>
-        ))}
 
-      </div>
+          <div className="department-score">
+            {department.score != null
+              ? `${department.score}`
+              : "N/A"}
+          </div>
 
+          <div className="progress-bar">
+            <div
+              className="progress"
+              style={{
+                width:
+                  department.score != null
+                    ? `${Math.min(
+                        100,
+                        Math.max(0, department.score)
+                      )}%`
+                    : "0%",
+              }}
+            />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

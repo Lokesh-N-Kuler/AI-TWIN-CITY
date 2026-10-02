@@ -1,62 +1,68 @@
+import { useEffect, useState } from "react";
+
 function AICityInsights() {
-  const insights = [
-    {
-      title: "Traffic Pattern Detected",
-      text: "Traffic congestion is expected to increase by 18% during evening peak hours.",
-    },
-    {
-      title: "Air Quality Warning",
-      text: "PM 2.5 levels are rising in industrial and high-traffic zones.",
-    },
-    {
-      title: "Emergency Response Improving",
-      text: "Average emergency response time has improved compared to previous days.",
-    },
-  ];
+  const [insights, setInsights] = useState([]);
+
+  useEffect(() => {
+    const loadInsights = async () => {
+      try {
+        const response = await fetch(
+          "http://127.0.0.1:8000/api/analytics/"
+        );
+
+        if (!response.ok) {
+          throw new Error("Unable to fetch insights");
+        }
+
+        const result = await response.json();
+
+        setInsights(result.insights || []);
+      } catch (error) {
+        console.error("Analytics insights error:", error);
+      }
+    };
+
+    loadInsights();
+
+    const interval = setInterval(loadInsights, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="ai-city-card">
-
       <div className="ai-city-header">
-
         <div>
-          <h2>AI City Insights</h2>
-
-          <p>
-            Intelligent insights generated from city data
-          </p>
+          <h2>City Performance Insights</h2>
+          <p>Live analysis from connected city data sources</p>
         </div>
 
         <span className="ai-city-badge">
-          AI INSIGHTS
+          LIVE
         </span>
-
       </div>
 
       <div className="insights-list">
-
-        {insights.map((insight, index) => (
-          <div className="insight-item" key={index}>
-
-            <div className="insight-number">
-              {index + 1}
-            </div>
-
-            <div>
-              <h3>{insight.title}</h3>
-
-              <p>{insight.text}</p>
-            </div>
-
+        {insights.length === 0 ? (
+          <div className="insight-item">
+            <span className="insight-number">1</span>
+            <p>Waiting for live analytics data...</p>
           </div>
-        ))}
+        ) : (
+          insights.map((insight, index) => (
+            <div
+              className="insight-item"
+              key={`${index}-${insight}`}
+            >
+              <span className="insight-number">
+                {index + 1}
+              </span>
 
+              <p>{insight}</p>
+            </div>
+          ))
+        )}
       </div>
-
-      <button className="view-insights-btn">
-        View Detailed Insights
-      </button>
-
     </div>
   );
 }
