@@ -52,18 +52,27 @@ function ChatBox({ selectedQuestion, onQuestionUsed }) {
         }
       );
 
-      const data = await response.json();
+      let data;
+
+      try {
+        data = await response.json();
+      } catch {
+        throw new Error(
+          `AI server returned an invalid response (${response.status}).`
+        );
+      }
 
       if (!response.ok) {
         throw new Error(
-          data.detail || "AI request failed"
+          data?.detail ||
+            `AI request failed with status ${response.status}.`
         );
       }
 
       const aiMessage = {
         sender: "ai",
         text:
-          data.response ||
+          data?.response ||
           "I could not generate a response from the current city data.",
       };
 
@@ -72,12 +81,15 @@ function ChatBox({ selectedQuestion, onQuestionUsed }) {
         aiMessage,
       ]);
     } catch (error) {
+      console.error("City Pilot AI error:", error);
+
       setMessages((previousMessages) => [
         ...previousMessages,
         {
           sender: "ai",
           text:
-            "I could not connect to the City Pilot AI backend. Please make sure the FastAPI backend and Gemini configuration are running.",
+            error?.message ||
+            "Unable to connect to City Pilot AI.",
         },
       ]);
     } finally {
@@ -102,6 +114,7 @@ function ChatBox({ selectedQuestion, onQuestionUsed }) {
 
         <div>
           <h2>City Pilot AI</h2>
+
           <span>
             {loading
               ? "Analyzing live city data..."
@@ -139,14 +152,16 @@ function ChatBox({ selectedQuestion, onQuestionUsed }) {
           type="text"
           placeholder="Ask City Pilot AI..."
           value={input}
-          onChange={(event) => setInput(event.target.value)}
+          onChange={(event) =>
+            setInput(event.target.value)
+          }
           onKeyDown={handleKeyDown}
           disabled={loading}
         />
 
         <button
           onClick={handleSend}
-          disabled={loading}
+          disabled={loading || !input.trim()}
         >
           {loading ? "..." : "Send"}
         </button>
